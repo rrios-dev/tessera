@@ -1,0 +1,12 @@
+.build/
+.swiftpm/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+DerivedData/
+.DS_Store
+# Local, machine-specific captures that are not meant to be shared.
+fixtures/local-*.json
+spikes/**/output/
+
+# Release artefacts (scripts/release.sh)
+dist/

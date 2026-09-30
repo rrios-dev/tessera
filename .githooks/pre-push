@@ -1,0 +1,4 @@
+#!/bin/zsh
+# Runs the quality gate before anything leaves the machine (audit F1).
+# Skip once with: git push --no-verify (and say why in the PR).
+exec ${0:A:h}/../scripts/gate.sh

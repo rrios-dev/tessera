@@ -1,0 +1,27 @@
+# Forgejo Actions on a self-hosted macOS runner (the Mac Studio, label `macos-arm64`, run by a
+# separate user account without the Accessibility permission). The runner is installed by the
+# owner: see docs/RUNBOOK.md › "CI runner". Until it is registered, scripts/gate.sh run by the
+# pre-push hook is the gate.
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    runs-on: macos-arm64
+    timeout-minutes: 30
+    steps:
+      # Pinned by commit, not by tag (audit F10).
+      - uses: https://code.forgejo.org/actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - run: swift --version
+      - run: scripts/gate.sh

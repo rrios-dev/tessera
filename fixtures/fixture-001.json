@@ -1,0 +1,135 @@
+{
+  "accessibility": {
+    "differentiateWithoutColor": false,
+    "increaseContrast": false,
+    "reduceMotion": false,
+    "reduceTransparency": false,
+    "voiceOver": false
+  },
+  "capturedAt": "2026-09-25T09:51:03Z",
+  "displays": [
+    {
+      "backingScale": 1,
+      "displayID": 5,
+      "frame": {
+        "height": 2560,
+        "width": 1080,
+        "x": 0,
+        "y": 0
+      },
+      "isBuiltin": false,
+      "isMain": true,
+      "menuBarHeight": 30,
+      "model": 0,
+      "name": "LG ULTRAWIDE",
+      "pixelHeight": 2560,
+      "pixelWidth": 1080,
+      "refreshHz": 75,
+      "rotationDegrees": 270,
+      "safeAreaInsets": {
+        "bottom": 0,
+        "left": 0,
+        "right": 0,
+        "top": 0
+      },
+      "serial": 0,
+      "unitNumber": 4,
+      "uuid": null,
+      "vendor": 0,
+      "visibleFrame": {
+        "height": 2448,
+        "width": 1080,
+        "x": 0,
+        "y": 30
+      }
+    }
+  ],
+  "dock": {
+    "autohide": false,
+    "orientation": "bottom",
+    "tileSize": 66
+  },
+  "input": {
+    "currentKeyboardLayout": "com.apple.keylayout.Spanish-ISO",
+    "enabledKeyboardLayouts": [
+      "com.apple.keylayout.Spanish-ISO"
+    ],
+    "secureInputActive": false
+  },
+  "otherWindowManagers": [
+    {
+      "bindings": {
+        "byModifiers": {
+          "alt": 31,
+          "alt+cmd": 9,
+          "alt+shift": 41,
+          "none": 4
+        },
+        "optionOnlyFamily": 72,
+        "total": 85
+      },
+      "configPath": "~/.aerospace.toml",
+      "name": "AeroSpace",
+      "running": true,
+      "version": "0.20.3-Beta"
+    }
+  ],
+  "schema": 1,
+  "spaces": {
+    "displaysHaveSeparateSpaces": true,
+    "perDisplay": [
+      {
+        "currentSpaceType": 0,
+        "displayIdentifier": "Main",
+        "spaceTypes": [
+          0,
+          4
+        ]
+      }
+    ]
+  },
+  "system": {
+    "architecture": "arm64",
+    "hardwareModel": "redacted",
+    "osBuild": "25G83",
+    "osVersion": "26.6.2"
+  },
+  "windowManagement": {
+    "missionControlGroupsByApp": false,
+    "rearrangeSpacesByRecentUse": false,
+    "stageManagerEnabled": false,
+    "tiledWindowMargins": false,
+    "tilingByEdgeDrag": false,
+    "tilingByTopEdgeDrag": false,
+    "tilingOptionAccelerator": false
+  },
+  "windows": {
+    "byLayer": {
+      "-2147483601": 6,
+      "-2147483602": 2,
+      "-2147483603": 1,
+      "-2147483622": 1,
+      "-2147483624": 2,
+      "-2147483625": 1,
+      "-2147483626": 7,
+      "0": 92,
+      "1000": 2,
+      "101": 1,
+      "103": 4,
+      "20": 1,
+      "2005": 1,
+      "21": 1,
+      "2147483630": 1,
+      "23": 2,
+      "24": 2,
+      "25": 16,
+      "3": 4,
+      "8": 1
+    },
+    "layerZero": 92,
+    "layerZeroInOnScreenList": 2,
+    "layerZeroOnScreen": 2,
+    "owningProcesses": 35,
+    "total": 148
+  }
+}
