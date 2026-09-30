@@ -130,3 +130,5 @@ Code and documentation are in English; what a person reads on screen is Spanish 
 ## License
 
 MIT. See `LICENSE` and `NOTICE.md`.
+
+Made by [Roberto Ríos](https://www.rrios.dev), full-stack developer in Spain. Tessera has its own page at [rrios.dev/apps/tessera](https://www.rrios.dev/apps/tessera).
