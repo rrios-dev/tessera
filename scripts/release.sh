@@ -1,6 +1,7 @@
 #!/bin/zsh
 # Builds a distributable Tessera: universal (arm64 + x86_64) when the toolchain can, signed with
-# the Developer ID, notarized and stapled, zipped as dist/Tessera-<version>.zip. Installs nothing.
+# the Developer ID, notarized and stapled, zipped as dist/Tessera-<version>.zip and wrapped in the
+# drag-to-Applications installer dist/Tessera.dmg (signed, notarized, stapled). Installs nothing.
 # usage: scripts/release.sh
 set -euo pipefail
 repo=${0:A:h}/..
@@ -54,4 +55,7 @@ spctl --assess --type execute --verbose=2 $app
 mkdir -p dist
 ditto -c -k --keepParent $app dist/Tessera-$version.zip
 shasum -a 256 dist/Tessera-$version.zip | tee dist/Tessera-$version.zip.sha256
-echo "built dist/Tessera-$version.zip ($archs, $sha)"
+# Unversioned on purpose: /releases/latest/download/Tessera.dmg always points at the newest one.
+scripts/make-dmg.sh $app dist/Tessera.dmg
+shasum -a 256 dist/Tessera.dmg | tee dist/Tessera.dmg.sha256
+echo "built dist/Tessera-$version.zip and dist/Tessera.dmg ($archs, $sha)"

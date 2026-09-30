@@ -126,10 +126,16 @@ never the private history (which kept machine identifiers in old fixtures). Forg
 git switch public && git checkout main -- . && git add -A
 git commit -m "Tessera <version> — <summary>"          # after bumping BuildInfo.version on main
 git push github public:main && git switch main
-git switch public && scripts/release.sh && git switch main   # signed, notarized, universal zip in dist/
-gh release create v<version> dist/Tessera-<version>.zip dist/Tessera-<version>.zip.sha256 \
+git switch public && scripts/release.sh && git switch main   # signed, notarized, universal zip + dmg in dist/
+gh release create v<version> dist/Tessera.dmg dist/Tessera.dmg.sha256 \
+  dist/Tessera-<version>.zip dist/Tessera-<version>.zip.sha256 \
   --repo rrios-dev/tessera --target main --title "Tessera <version>" --notes-file <notes>
 ```
+
+`Tessera.dmg` keeps no version in its name so that
+`/releases/latest/download/Tessera.dmg` (linked from the README and rrios.dev) always serves the
+newest. Its window is `assets/dmg` (`make-background.sh` after editing `background.svg`), laid out
+by `scripts/dmg-settings.py`; `scripts/make-dmg.sh` wraps an already notarized app on its own.
 
 Before each publish: `git grep -nE "UUID \`|/Users/|serial\" : [1-9]" public` must find nothing
 machine-specific, and fixtures are captured with `tessera doctor` (redacted by default).

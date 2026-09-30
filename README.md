@@ -35,10 +35,11 @@ removes it.
 
 Requires macOS 15.2 or later.
 
-**Download.** Get `Tessera-<version>.zip` from the
-[latest release](https://github.com/rrios-dev/tessera/releases/latest), unzip it, move
-`Tessera.app` to `/Applications` and open it. It is signed with a Developer ID and notarized by
-Apple. To start it at login and have it restart after a crash:
+**Download.** Get [`Tessera.dmg`](https://github.com/rrios-dev/tessera/releases/latest/download/Tessera.dmg),
+open it and drag Tessera onto Applications, then open it from there. The app and the disk image
+are signed with a Developer ID and notarized by Apple. A plain `Tessera-<version>.zip` sits next
+to it in the [latest release](https://github.com/rrios-dev/tessera/releases/latest) for scripts.
+To start it at login and have it restart after a crash:
 
 ```bash
 /Applications/Tessera.app/Contents/MacOS/tessera service install --binary /Applications/Tessera.app/Contents/MacOS/tessera

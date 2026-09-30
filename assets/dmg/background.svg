@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="660" height="420" viewBox="0 0 660 420">
+  <!-- The foreground of the installer window: an arrow from the app to Applications, the label
+       chips and the corner crosses, on transparent. The black, the fading grid, the glow and the
+       lockup are composited by make-background.sh (ImageMagick's renderer has no masks).
+       Icon centres (170, 214) and (490, 214) match scripts/dmg-settings.py. -->
+  <!-- Arrow: app → Applications -->
+  <path d="M262 214H392" stroke="#ffffff" stroke-opacity="0.7" stroke-width="1.5" stroke-dasharray="1 7" stroke-linecap="round"/>
+  <path d="M388 206L398 214L388 222" fill="none" stroke="#ffffff" stroke-opacity="0.9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Label chips: Finder draws icon labels black in light mode and white in dark mode, over a
+       picture it cannot see. A mid grey reads with both (4.6:1 and 4.5:1). -->
+  <rect x="115" y="275" width="110" height="22" rx="11" fill="#767676"/>
+  <rect x="435" y="275" width="110" height="22" rx="11" fill="#767676"/>
+
+  <!-- Corner crosses -->
+  <g stroke="#ffffff" stroke-opacity="0.35" stroke-width="1">
+    <path d="M24 18V30M18 24H30"/>
+    <path d="M636 390V402M630 396H642"/>
+  </g>
+</svg>
