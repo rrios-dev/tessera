@@ -51,7 +51,7 @@ struct LifecycleTests {
         h.engine.execute(.workspace("2"))
         #expect(await h.until { h.engine.journal.hidden[a] == nil })
         #expect(h.frame(a)?.origin == placed.origin, "back on screen, confirmed")
-        #expect(h.engine.journal.hidden[b] != nil, "group 1 is the hidden one now")
+        #expect(await h.until { h.engine.journal.hidden[b] != nil }, "group 1 is the hidden one now")
     }
 
     @Test func rescueSweepRestoresWindowsTheModelNoLongerHides() async throws {
