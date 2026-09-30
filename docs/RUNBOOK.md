@@ -116,3 +116,20 @@ python3 spikes/S1-single-monitor/wait-and-run.py --runs 5 # waits for an idle de
 
 Results accumulate in `spikes/results/*.jsonl`. Failures are classified *infra* (the harness
 could not set up) or *product* (an invariant broke).
+
+## Publishing a version (github.com/rrios-dev/tessera)
+
+The public repository carries a clean history: the `public` branch here, one commit per release,
+never the private history (which kept machine identifiers in old fixtures). Forgejo keeps both.
+
+```bash
+git switch public && git checkout main -- . && git add -A
+git commit -m "Tessera <version> — <summary>"          # after bumping BuildInfo.version on main
+git push github public:main && git switch main
+git switch public && scripts/release.sh && git switch main   # signed, notarized, universal zip in dist/
+gh release create v<version> dist/Tessera-<version>.zip dist/Tessera-<version>.zip.sha256 \
+  --repo rrios-dev/tessera --target main --title "Tessera <version>" --notes-file <notes>
+```
+
+Before each publish: `git grep -nE "UUID \`|/Users/|serial\" : [1-9]" public` must find nothing
+machine-specific, and fixtures are captured with `tessera doctor` (redacted by default).

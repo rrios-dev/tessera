@@ -54,6 +54,9 @@ if arguments.first == "model" {
     exit(ModelRun.run(steps: arguments.dropFirst().first.flatMap { Int($0) } ?? 1_000_000))
 }
 let checking = arguments.contains("--check")
+/// Hosted CI runners are shared virtual machines: their timings are reported, not judged. The
+/// plan's budgets and the baselines are checked on real hardware (scripts/gate.sh).
+let reportOnly = arguments.contains("--report")
 let recording = arguments.contains("--record")
 let baselineURL = URL(fileURLWithPath: "bench/baseline.json")
 let baseline = (try? JSONDecoder().decode([String: Double].self, from: Data(contentsOf: baselineURL))) ?? [:]
@@ -128,4 +131,4 @@ if recording {
     print("baseline written to \(baselineURL.path)")
 }
 print(failures == 0 ? "\nall budgets met" : "\n\(failures) budget(s) missed")
-exit(failures == 0 ? 0 : 1)
+exit(failures == 0 || reportOnly ? 0 : 1)

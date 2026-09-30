@@ -33,5 +33,7 @@ jobs:
           swift --version
       - run: swift build
       - run: swift test
-      # Plan §11 budgets for the pure core (fails the job when missed).
-      - run: swift run -c release tessera-bench --check
+      # Timings on shared hosted runners are reported, not judged; the plan §11 budgets and the
+      # baselines are enforced on real hardware by scripts/gate.sh.
+      - run: swift run -c release tessera-bench --report
+      - run: swift run -c release tessera-bench model 200000
