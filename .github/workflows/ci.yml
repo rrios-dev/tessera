@@ -32,7 +32,11 @@ jobs:
           if [ -n "$xcode" ]; then sudo xcode-select -s "$xcode"; fi
           swift --version
       - run: swift build
+      # Shared runners are several times slower than a developer's Mac: the engine's intervals
+      # and the tests' waits stretch together (Tests/TesseraEngineTests/Harness.swift).
       - run: swift test
+        env:
+          TESSERA_TEST_PACE: "5"
       # Timings on shared hosted runners are reported, not judged; the plan §11 budgets and the
       # baselines are enforced on real hardware by scripts/gate.sh.
       - run: swift run -c release tessera-bench --report

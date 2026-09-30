@@ -15,10 +15,19 @@ final class Harness {
     var options: Engine.Options
     let timing: Timing
 
+    /// How much slower than a developer's Mac the machine running the suite is. Every interval
+    /// the engine uses and every wait the tests make scale by it together, so their proportions
+    /// hold: a shared CI runner sets `TESSERA_TEST_PACE` (see ci.yml) instead of each test
+    /// growing its own margins.
+    static let pace: Double = {
+        let value = ProcessInfo.processInfo.environment["TESSERA_TEST_PACE"].flatMap(Double.init) ?? 1
+        return max(value, 1)
+    }()
+
     static let timing: Timing = {
-        var timing = Timing.production.scaled(0.02)
+        var timing = Timing.production.scaled(0.02 * pace)
         // Quitting waits for confirmations; under a loaded test run 40 ms is not enough.
-        timing.shutdownWait = 3
+        timing.shutdownWait = 3 * pace
         return timing
     }()
 
@@ -64,7 +73,7 @@ final class Harness {
 
     /// Polls `condition` every few milliseconds until it holds or `timeout` passes.
     func until(_ timeout: TimeInterval = 2, _ condition: () -> Bool) async -> Bool {
-        let deadline = Date().addingTimeInterval(timeout)
+        let deadline = Date().addingTimeInterval(timeout * Harness.pace)
         while Date() < deadline {
             if condition() { return true }
             try? await Task.sleep(nanoseconds: 5_000_000)
@@ -73,7 +82,7 @@ final class Harness {
     }
 
     func settle(_ seconds: TimeInterval = 0.15) async {
-        try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+        try? await Task.sleep(nanoseconds: UInt64(seconds * Harness.pace * 1_000_000_000))
     }
 
     func frame(_ id: WindowID) -> Rect? { platform.windows[id]?.frame }
