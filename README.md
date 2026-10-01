@@ -1,4 +1,10 @@
-<p align="center"><img src="assets/brand/lockup.svg" alt="tessera" width="320"></p>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/lockup-white.svg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/brand/lockup.svg">
+    <img src="assets/brand/lockup.svg" alt="tessera" width="320">
+  </picture>
+</p>
 
 A tiling window manager for macOS that never leaves holes.
 
