@@ -237,4 +237,9 @@ func printUsage() {
     """)
 }
 
-exit(MainActor.assumeIsolated { run(Array(CommandLine.arguments.dropFirst())) })
+let launchArguments = LaunchCommand.arguments(
+    given: Array(CommandLine.arguments.dropFirst()),
+    inAppBundle: Bundle.main.bundleURL.pathExtension == "app",
+    interactive: isatty(STDIN_FILENO) != 0
+)
+exit(MainActor.assumeIsolated { run(launchArguments) })
