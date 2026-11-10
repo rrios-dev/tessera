@@ -61,7 +61,9 @@ extension Engine {
             : L10n.t("VoiceOver desactivado: los atajos de Tessera vuelven a \(glyphs).", "VoiceOver is off: Tessera's shortcuts go back to \(glyphs).")))
     }
 
-    /// Holding exactly the base modifiers for a moment shows the shortcut overlay.
+    /// Holding exactly the base modifiers for a moment shows the shortcut overlay — held
+    /// alone: with a key down as well, they are another app's shortcut being held (Quill's
+    /// ⌃⌥R to dictate), and the overlay would cover what that app shows.
     func modifiersChanged(_ flags: KeyFlags) {
         modifiersHeld = flags
         let base = Keymap.modifiers(voiceOver: port.voiceOverEnabled())
@@ -72,7 +74,8 @@ extension Engine {
         cheatsheetToken += 1
         let token = cheatsheetToken
         after(timing.cheatsheetHold) { [weak self] in
-            guard let self, self.cheatsheetToken == token, self.modifiersHeld == base, !self.cheatsheetVisible else { return }
+            guard let self, self.cheatsheetToken == token, self.modifiersHeld == base, !self.cheatsheetVisible,
+                  !self.port.nonModifierKeyDown() else { return }
             self.cheatsheetVisible = true
             self.ui.showCheatsheet(true)
         }

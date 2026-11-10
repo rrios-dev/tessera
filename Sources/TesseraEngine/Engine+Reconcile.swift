@@ -390,6 +390,10 @@ extension Engine {
         if inFlight.contains(id) || isEcho(id) { return }
         let previous = observed[id]
         observed[id] = frame
+        // The first frame read is an input the last render lacked: a window it had to hide was
+        // skipped for want of one (right after a restart, before the first scan), and no other
+        // event comes to try again.
+        if previous == nil { scheduleRender() }
         if previous != frame { checkContradiction(id, frame: frame) }
         if mouseIsDown, let previous, previous != frame, let record = world.windows[id],
            record.mode == .tiled || (record.mode == .floating && record.userFloating == true) {

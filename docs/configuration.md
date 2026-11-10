@@ -20,6 +20,9 @@ float = ["us.zoom.xos"]                     # always floating
 # Any action from `tessera keys`, by name, to a chord or "none".
 toggle-floating = "ctrl-alt-shift-space"
 layout-accordion = "none"
+
+[agents]
+enabled = false               # true: Claude Code, Codex… may use Tessera over MCP (`tessera mcp`, ADR 0005)
 ```
 
 Action names: `focus-left|right|up|down` (and `-arrow`), `move-…`, `workspace-1…9`,

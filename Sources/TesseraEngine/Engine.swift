@@ -503,8 +503,7 @@ public final class Engine {
     // MARK: - Configuration
 
     var configURL: URL {
-        options.configFile ?? FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".config/tessera/tessera.local.toml")
+        options.configFile ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(LocalConfig.homeRelativePath)
     }
 
     /// Reads the local configuration overlay; errors are reported, never fatal (audit E9).

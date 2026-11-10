@@ -14,6 +14,11 @@ let package = Package(
         .executable(name: "tessera", targets: ["tessera"]),
         .executable(name: "DummyWindowApp", targets: ["DummyWindowApp"]),
     ],
+    dependencies: [
+        // The MCP server agents launch (`tessera mcp`, ADR 0005): the owner's own package,
+        // MIT, Foundation only — the one dependency outside this repository.
+        .package(url: "https://github.com/rrios-dev/mcpkit.git", from: "0.2.0"),
+    ],
     targets: [
         // Pure model, solver and invariants. Standard library only: no Foundation, no AppKit.
         .target(name: "TesseraCore", swiftSettings: common),
@@ -51,9 +56,19 @@ let package = Package(
             swiftSettings: common,
             linkerSettings: [.linkedFramework("AppKit")]
         ),
+        // What agents (Claude Code, Codex…) can do with Tessera over MCP: the tools, over the
+        // engine's socket (ADR 0005).
+        .target(
+            name: "TesseraMCP",
+            dependencies: ["TesseraCore", "TesseraIPC", .product(name: "MCPKit", package: "mcpkit")],
+            swiftSettings: common
+        ),
         .executableTarget(
             name: "tessera",
-            dependencies: ["TesseraCore", "TesseraConfig", "TesseraPlatform", "TesseraPorts", "TesseraIPC", "TesseraEngine", "TesseraAppUI"],
+            dependencies: [
+                "TesseraCore", "TesseraConfig", "TesseraPlatform", "TesseraPorts", "TesseraIPC", "TesseraEngine", "TesseraAppUI",
+                "TesseraMCP", .product(name: "MCPKit", package: "mcpkit"),
+            ],
             swiftSettings: common
         ),
         // Helpers for the live tests: Spaces, visible windows, parked windows, a synthetic drag.
@@ -79,6 +94,11 @@ let package = Package(
         .testTarget(
             name: "TesseraEngineTests",
             dependencies: ["TesseraEngine", "TesseraFakes", "TesseraCore", "TesseraPorts", "TesseraConfig", "TesseraIPC"],
+            swiftSettings: common
+        ),
+        .testTarget(
+            name: "TesseraMCPTests",
+            dependencies: ["TesseraMCP", "TesseraIPC", "TesseraCore", .product(name: "MCPKit", package: "mcpkit")],
             swiftSettings: common
         ),
         .testTarget(

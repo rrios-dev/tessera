@@ -19,6 +19,9 @@ public import TesseraCore
 /// [keys]
 /// toggle-floating = "ctrl-alt-shift-space"
 /// layout-accordion = "none"
+///
+/// [agents]
+/// enabled = true                # let Claude Code, Codex… use Tessera over MCP (ADR 0005)
 /// ```
 public struct LocalConfig: Sendable, Equatable {
     public var innerGap: Int?
@@ -29,10 +32,15 @@ public struct LocalConfig: Sendable, Equatable {
     public var exclude: [String] = []
     public var float: [String] = []
     public var keys: [String: String] = [:]
+    /// Agents may use Tessera over MCP (`tessera mcp`, ADR 0005). Off unless set to true.
+    public var agentsEnabled: Bool?
     /// Keys the parser did not recognise; reported, never fatal.
     public var warnings: [String] = []
 
     public init() {}
+
+    /// Where the overlay lives, relative to the home folder.
+    public static let homeRelativePath = ".config/tessera/tessera.local.toml"
 
     public struct Failure: Error, Equatable, CustomStringConvertible {
         public var line: Int
@@ -54,7 +62,7 @@ public struct LocalConfig: Sendable, Equatable {
             if line.hasPrefix("[") {
                 guard line.hasSuffix("]"), line.count > 2 else { throw Failure(line: number, message: "malformed section header") }
                 section = String(line.dropFirst().dropLast()).trimmed
-                guard ["general", "apps", "keys"].contains(section) else { throw Failure(line: number, message: "unknown section [\(section)]") }
+                guard ["general", "apps", "keys", "agents"].contains(section) else { throw Failure(line: number, message: "unknown section [\(section)]") }
                 continue
             }
             guard let equals = line.firstIndex(of: "=") else { throw Failure(line: number, message: "expected key = value") }
@@ -97,6 +105,9 @@ public struct LocalConfig: Sendable, Equatable {
         case ("apps", "exclude"): exclude = try strings()
         case ("apps", "float"): float = try strings()
         case ("keys", _): keys[key] = try string()
+        case ("agents", "enabled"):
+            guard case .bool(let flag) = value else { throw Failure(line: line, message: "\(key) must be true or false") }
+            agentsEnabled = flag
         case ("", _): throw Failure(line: line, message: "'\(key)' is outside any section")
         default: warnings.append("line \(line): unknown key '\(key)' in [\(section)]")
         }

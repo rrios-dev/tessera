@@ -72,7 +72,13 @@ final class Harness {
     }
 
     /// Polls `condition` every few milliseconds until it holds or `timeout` passes.
-    func until(_ timeout: TimeInterval = 2, _ condition: () -> Bool) async -> Bool {
+    ///
+    /// The timeout is how long a failing test waits before it says so, not how long a passing one
+    /// takes: `until` returns the moment the condition holds. So it is generous. Every test of the
+    /// suite shares the main actor, and on a loaded machine starting an engine alone can take
+    /// seconds; a tight default turned those runs red at random. Waiting for something *not* to
+    /// happen is `settle`'s job, never `until`'s.
+    func until(_ timeout: TimeInterval = 10, _ condition: () -> Bool) async -> Bool {
         let deadline = Date().addingTimeInterval(timeout * Harness.pace)
         while Date() < deadline {
             if condition() { return true }

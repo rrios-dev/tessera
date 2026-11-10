@@ -41,6 +41,28 @@ extension Engine {
         }
     }
 
+    /// Why a workspace command cannot do anything here, in words for a caller that cannot see
+    /// the on-screen notice — the CLI or an agent over IPC, which were told "ok" and believed it
+    /// (found by the MCP audit, 2026-10-14). Nil when the command can run.
+    func nativeRefusal(_ command: Command) -> String? {
+        guard nativeWorkspaces else { return nil }
+        switch command {
+        case .workspace(let name):
+            refreshSpaces()
+            let count = min(desktopOrder.count, Self.maxDesktops)
+            guard let target = Int(name), (1...max(1, count)).contains(target), count > 0 else {
+                return count > 0 && Int(name) != nil
+                    ? "there is no desktop \(name): this display has \(count). Add more in Mission Control."
+                    : "“\(name)” is not a desktop: use a number from 1 to \(max(1, count))."
+            }
+            return nil
+        case .moveNodeToWorkspace:
+            return "macOS does not let Tessera move windows between desktops (ADR 0003): the user drags the window and, while holding it, presses ⌃ and the desktop's number."
+        default:
+            return nil
+        }
+    }
+
     /// Whether synthesized keys are safe right now (audit B3): never under Secure Input (a
     /// password field would receive them) and never while the login window or an authorisation
     /// dialog is in front.

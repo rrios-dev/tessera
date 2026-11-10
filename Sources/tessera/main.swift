@@ -224,6 +224,7 @@ func printUsage() {
       pause | resume | retile (alias gather) | reload-config | revert-layout | retry | forget-sizes
       keys [--voiceover]         Print the keyboard shortcuts.
       version
+      mcp                        Serve agents (Claude Code, Codex) over MCP on stdio (ADR 0005).
 
     diagnostics:
       debug state|stats|activity|check
@@ -242,4 +243,13 @@ let launchArguments = LaunchCommand.arguments(
     inAppBundle: Bundle.main.bundleURL.pathExtension == "app",
     interactive: isatty(STDIN_FILENO) != 0
 )
+// The MCP server runs on its own task; the top level stays synchronous so the engine's
+// start-up (`run`) is untouched.
+if launchArguments == ["mcp"] {
+    Task.detached {
+        await MCPServer.serve()
+        exit(0)
+    }
+    dispatchMain()
+}
 exit(MainActor.assumeIsolated { run(launchArguments) })

@@ -51,6 +51,9 @@ public final class FakePlatform: SystemPort {
         public var unresponsive = false
         /// Every write fails with this outcome and changes nothing.
         public var writeFailure: AXOutcome?
+        /// Window-list queries wait unanswered until `answerWindowLists(pid:)`, like a busy app
+        /// slow to answer Accessibility: lets a test order a scan against everything else.
+        public var holdsWindowLists = false
         public var focused: WindowID?
         public var enhancedUserInterface = false
     }
@@ -86,6 +89,7 @@ public final class FakePlatform: SystemPort {
     public private(set) var monitoring = false
     public private(set) var observed: Set<Int32> = []
     private var subscribed: Set<WindowID> = []
+    private var heldWindowLists: [Int32: [@Sendable ([WindowSnapshot]?) -> Void]] = [:]
     private var nextID: WindowID = 1000
 
     public init(
@@ -171,6 +175,18 @@ public final class FakePlatform: SystemPort {
     }
 
     public func advanceClock(by seconds: TimeInterval) { clockOffset += seconds }
+
+    /// Answers the window-list queries an app held back, in the order they were asked.
+    public func answerWindowLists(pid: Int32) {
+        apps[pid]?.holdsWindowLists = false
+        let held = heldWindowLists.removeValue(forKey: pid) ?? []
+        for completion in held { completion(listWindows(pid)) }
+    }
+
+    func listWindowsOrHold(_ pid: Int32, completion: @escaping @Sendable ([WindowSnapshot]?) -> Void) {
+        guard apps[pid]?.holdsWindowLists == true else { return completion(listWindows(pid)) }
+        heldWindowLists[pid, default: []].append(completion)
+    }
 
     /// Changes a window without telling anyone, as when a notification is lost.
     public func silentlyMove(_ id: WindowID, to frame: Rect) {
@@ -327,6 +343,9 @@ public final class FakePlatform: SystemPort {
     public func stageManagerEnabled() -> Bool { stageManager }
     public func edgeTilingEnabled() -> Bool { edgeTiling }
     public func voiceOverEnabled() -> Bool { voiceOver }
+    /// A key other than a modifier is held (another app's shortcut).
+    public var keyHeld = false
+    public func nonModifierKeyDown() -> Bool { keyHeld }
     public func postKey(_ keyCode: Int, flags: KeyFlags) { postedKeys.append((keyCode, flags)) }
     public func mouseLocation() -> Point { mouse }
     public func bootSessionID() -> String { bootSession }
@@ -388,7 +407,7 @@ final class FakeDriver: AppDriver, @unchecked Sendable {
 
     func windows(completion: @escaping @Sendable ([WindowSnapshot]?) -> Void) {
         let pid = pid
-        onMain { completion($0.listWindows(pid)) }
+        onMain { $0.listWindowsOrHold(pid, completion: completion) }
     }
 
     func frame(of id: WindowID, completion: @escaping @Sendable (Rect?) -> Void) {

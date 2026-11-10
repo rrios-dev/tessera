@@ -55,7 +55,11 @@ extension Engine {
             do {
                 let command = try CommandParser.parse(words)
                 guard status.isActive else { return IPCResponse(ok: false, error: "Tessera is \(statusWord)") }
+                // Checked before running: the command still runs, so the on-screen notice shows,
+                // but the caller hears why nothing happened instead of "ok".
+                let refusal = nativeRefusal(command)
                 execute(command)
+                if let refusal { return IPCResponse(ok: false, error: refusal) }
                 return IPCResponse(ok: true)
             } catch {
                 return IPCResponse(ok: false, error: error.description)

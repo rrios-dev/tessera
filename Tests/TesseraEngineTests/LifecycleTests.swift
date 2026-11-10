@@ -54,6 +54,32 @@ struct LifecycleTests {
         #expect(await h.until { h.engine.journal.hidden[b] != nil }, "group 1 is the hidden one now")
     }
 
+    /// Found by a loaded run: right after a restart the layout is known from disk but no frame
+    /// has been read yet. A group switch in that gap could not hide the other group's windows,
+    /// and nothing tried again once their frames arrived: they stayed on screen, unjournaled.
+    @Test func aSwitchBeforeTheFirstScanStillHidesTheOtherGroup() async throws {
+        let h = try Harness(native: false)
+        h.platform.launch(pid: 10, bundleID: "com.example.a")
+        let a = h.platform.open(pid: 10, notify: false)
+        let b = h.platform.open(pid: 10, notify: false)
+        try h.start()
+        #expect(await h.until { h.frame(b)?.height == 1224 })
+        h.engine.execute(.focusWindow(a))
+        h.engine.execute(.moveNodeToWorkspace("2"))
+        #expect(await h.until { (h.frame(a)?.x ?? 0) >= 1079 && h.engine.inFlight.isEmpty })
+        await h.stop()
+
+        // The app is slow to list its windows to the restarted engine: no frame is known yet.
+        h.platform.apps[10]?.holdsWindowLists = true
+        try h.restart()
+        h.engine.execute(.workspace("2"))
+        await h.settle()
+        #expect(h.engine.observed[b] == nil, "the switch was rendered before any frame was read")
+        h.platform.answerWindowLists(pid: 10)
+        #expect(await h.until { h.engine.journal.hidden[b] != nil && (h.frame(b)?.x ?? 0) >= 1079 })
+        #expect(h.violations().isEmpty)
+    }
+
     @Test func rescueSweepRestoresWindowsTheModelNoLongerHides() async throws {
         let h = try Harness(native: false)
         h.platform.launch(pid: 10, bundleID: "com.example.a")
@@ -65,7 +91,7 @@ struct LifecycleTests {
         h.engine.execute(.focusWindow(a))
         h.engine.execute(.moveNodeToWorkspace("2"))
         #expect(await h.until { (h.frame(a)?.x ?? 0) >= 1079 })
-        let placed = h.engine.journal.hidden[a]!.frame
+        let placed = try #require(h.engine.journal.hidden[a]).frame
         h.platform.active = 7
         await h.stop()
         // A crash before the layout was saved: only the journal knows where `a` came from.
@@ -88,7 +114,7 @@ struct LifecycleTests {
         h.engine.execute(.focusWindow(a))
         h.engine.execute(.moveNodeToWorkspace("2"))
         #expect(await h.until { (h.frame(a)?.x ?? 0) >= 1079 })
-        let original = h.engine.journal.hidden[a]!.frame
+        let original = try #require(h.engine.journal.hidden[a]).frame
         await h.stop()
         #expect(h.frame(a) == original)
         #expect(try SecureFile.readJSON(Journal.self, from: h.engine.paths.journal)?.hidden.isEmpty == true)
@@ -390,7 +416,7 @@ extension LifecycleTests {
         h.engine.execute(.focusWindow(a))
         h.engine.execute(.moveNodeToWorkspace("2"))
         #expect(await h.until { (h.frame(a)?.x ?? 0) >= 1079 && h.engine.inFlight.isEmpty })
-        let original = h.engine.journal.hidden[a]!.frame
+        let original = try #require(h.engine.journal.hidden[a]).frame
         await h.stop()
         // A render arriving now must not touch anything.
         h.engine.render()

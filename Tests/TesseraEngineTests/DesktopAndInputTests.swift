@@ -83,6 +83,25 @@ struct DesktopAndInputTests {
         #expect(h.platform.postedKeys.first?.keyCode == KeyCode.digits[0])
     }
 
+    // The CLI and agents over IPC cannot see the notice: they hear the reason, not "ok".
+    @Test func ipcCallersHearWhyADesktopCommandDidNothing() throws {
+        let h = try started()
+        func send(_ words: [String]) throws -> IPCResponse {
+            h.engine.respond(try JSONEncoder().encode(IPCRequest(command: words)))
+        }
+        let missing = try send(["workspace", "3"])
+        #expect(!missing.ok)
+        #expect(missing.error == "there is no desktop 3: this display has 2. Add more in Mission Control.")
+        #expect(try send(["workspace", "web"]).error == "“web” is not a desktop: use a number from 1 to 2.")
+        #expect(h.platform.postedKeys.isEmpty)
+        let moved = try send(["move-node-to-workspace", "2"])
+        #expect(!moved.ok)
+        #expect(moved.error?.hasPrefix("macOS does not let Tessera move windows between desktops") == true)
+        #expect(h.ui.noticeKeys().contains("move-by-hand"), "the on-screen notice still shows")
+        #expect(try send(["workspace", "2"]).ok)
+        #expect(h.platform.postedKeys.count == 1)
+    }
+
     @Test func movingAWindowToAnotherDesktopExplainsHow() throws {
         let h = try started()
         for _ in 0..<5 { h.engine.execute(.moveNodeToWorkspace("2")) }
@@ -149,6 +168,19 @@ struct DesktopAndInputTests {
         #expect(await h.until { h.ui.cheatsheetShown.last == true })
         h.platform.emit(.modifiersChanged([]))
         #expect(h.ui.cheatsheetShown.last == false)
+    }
+
+    @Test func modifiersHeldWithAnotherAppsKeyShowNoCheatsheet() async throws {
+        let h = try started()
+        h.platform.keyHeld = true
+        h.platform.emit(.modifiersChanged([.control, .option]))
+        // Longer than the hold that shows it alone.
+        try await Task.sleep(for: .milliseconds(Int(h.timing.cheatsheetHold * 1000) + 300))
+        #expect(h.ui.cheatsheetShown.last != true)
+        h.platform.keyHeld = false
+        h.platform.emit(.modifiersChanged([]))
+        h.platform.emit(.modifiersChanged([.control, .option]))
+        #expect(await h.until { h.ui.cheatsheetShown.last == true }, "alone, they still show it")
     }
 
     @Test func keymapTextFoldsDigitsAndArrows() {

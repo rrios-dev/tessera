@@ -70,4 +70,11 @@ struct LocalConfigTests {
         #expect(Keymap.defaults(voiceOver: true).allSatisfy { $0.chord.flags.contains([.control, .option, .command]) })
         #expect(Keymap.defaults(voiceOver: false).allSatisfy { !$0.chord.flags.contains(.command) })
     }
+
+    @Test func agentsAreOffUnlessEnabled() throws {
+        #expect(try LocalConfig.parse("[general]\ninner-gap = 8").agentsEnabled == nil)
+        #expect(try LocalConfig.parse("[agents]\nenabled = true").agentsEnabled == true)
+        #expect(try LocalConfig.parse("[agents]\nenabled = false").agentsEnabled == false)
+        #expect(throws: LocalConfig.Failure.self) { try LocalConfig.parse("[agents]\nenabled = \"yes\"") }
+    }
 }

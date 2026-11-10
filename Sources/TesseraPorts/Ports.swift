@@ -62,6 +62,10 @@ public protocol SystemPort: AnyObject {
     func stageManagerEnabled() -> Bool
     func edgeTilingEnabled() -> Bool
     func voiceOverEnabled() -> Bool
+    /// Whether a key other than a modifier is down now, whichever app it went to. Another
+    /// app's shortcut on the same modifiers (Quill's ⌃⌥R, held to dictate) is consumed
+    /// before any monitor sees it; the hardware state still says it is down.
+    func nonModifierKeyDown() -> Bool
     /// Synthesizes one key press (down and up).
     func postKey(_ keyCode: Int, flags: KeyFlags)
     func mouseLocation() -> Point

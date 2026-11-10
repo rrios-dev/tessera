@@ -56,6 +56,26 @@ public enum WindowServer {
         return result
     }
 
+    /// The process and the app name owning each of the given windows: what an agent needs
+    /// to tell windows apart (ADR 0005). The owner's name is the app's, never the window's
+    /// title, which is not read.
+    public static func owners(of ids: [WindowID]) -> [WindowID: (pid: Int32, name: String)] {
+        Metrics.count(.windowListCopies)
+        guard !ids.isEmpty else { return [:] }
+        var pointers = ids.map { UnsafeRawPointer(bitPattern: UInt($0)) }
+        let array = pointers.withUnsafeMutableBufferPointer { buffer in
+            CFArrayCreate(nil, buffer.baseAddress, buffer.count, nil)
+        }
+        guard let array, let list = CGWindowListCreateDescriptionFromArray(array) as? [NSDictionary] else { return [:] }
+        var result: [WindowID: (pid: Int32, name: String)] = [:]
+        for entry in list {
+            guard let id = (entry[kCGWindowNumber as String] as? NSNumber)?.uint32Value,
+                  let pid = (entry[kCGWindowOwnerPID as String] as? NSNumber)?.int32Value else { continue }
+            result[id] = (pid, entry[kCGWindowOwnerName as String] as? String ?? "")
+        }
+        return result
+    }
+
     /// The frames the window server actually draws, top-left points.
     public static func bounds(of ids: [WindowID]) -> [WindowID: Rect] {
         Metrics.count(.windowListCopies)

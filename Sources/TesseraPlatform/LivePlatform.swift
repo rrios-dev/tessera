@@ -125,6 +125,14 @@ public final class LivePlatform: SystemPort {
 
     public func voiceOverEnabled() -> Bool { NSWorkspace.shared.isVoiceOverEnabled }
 
+    /// Virtual key codes 54–63 are the modifiers (command, shift, caps lock, option, control,
+    /// their right-hand twins, fn); every other code up to 127 is a key.
+    public func nonModifierKeyDown() -> Bool {
+        (0..<128).contains { code in
+            !(54...63).contains(code) && CGEventSource.keyState(.combinedSessionState, key: CGKeyCode(code))
+        }
+    }
+
     public func postKey(_ keyCode: Int, flags: KeyFlags) {
         let source = CGEventSource(stateID: .hidSystemState)
         var cgFlags: CGEventFlags = []

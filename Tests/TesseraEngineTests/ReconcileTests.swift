@@ -25,7 +25,7 @@ struct ReconcileTests {
         try h.start()
         #expect(await h.until { h.frame(b)?.height == 1500 && h.frame(a)?.height == 948 })
         #expect(h.engine.world.facts[b]?.minSize?.height == 1500)
-        #expect(h.frame(a)!.maxY == h.frame(b)!.minY, "no hole between them")
+        #expect(try #require(h.frame(a)).maxY == (try #require(h.frame(b))).minY, "no hole between them")
         // Facts outlive the window: stored under bundle, version, subrole and scale (D6).
         let store = try #require(try SecureFile.readJSON(FactStore.self, from: h.engine.paths.facts))
         #expect(store.records.values.contains { $0.facts.minSize?.height == 1500 })
@@ -51,7 +51,7 @@ struct ReconcileTests {
         h.platform.apps[10]?.writeFailure = .cannotComplete
         try h.start()
         // Both attempts made and failed…
-        #expect(await h.until(5) { h.engine.requested[a]?.attempts == 2 && h.engine.inFlight.isEmpty })
+        #expect(await h.until { h.engine.requested[a]?.attempts == 2 && h.engine.inFlight.isEmpty })
         await h.settle(0.1)
         // …and nothing learned from them.
         #expect(h.engine.world.facts[a] == nil)
@@ -94,10 +94,12 @@ struct ReconcileTests {
         let b = h.platform.open(pid: 10, notify: false)
         h.platform.windows[b]?.cyclingMinHeights = [1300, 1600, 1400, 1700]
         try h.start()
-        await h.settle(0.6)
+        // Wait for the backoff itself, not for a fixed time: the loop is paced by the main queue
+        // and the read-back delay, so under a loaded run it takes seconds instead of milliseconds.
+        // What bounds it is the write count, checked next.
+        #expect(await h.until { h.engine.backoff[b] != nil })
         let writes = h.platform.writeCount(b)
         #expect(writes <= Harness.timing.writeLimit + 2, "\(writes) writes")
-        #expect(h.engine.backoff[b] != nil)
         await h.settle(0.3)
         #expect(h.platform.writeCount(b) == writes, "no more writes during the backoff")
         #expect(h.ui.noticeKeys().contains("window-refuses"))
@@ -401,11 +403,11 @@ extension ReconcileTests {
         let a = h.platform.open(pid: 10, minSize: Size(width: 900, height: 1500), notify: false)
         let b = h.platform.open(pid: 10, minSize: Size(width: 900, height: 1500), notify: false)
         try h.start()
-        #expect(await h.until(5) { h.engine.world.windows.values.contains { $0.mode == .floating } })
+        #expect(await h.until { h.engine.world.windows.values.contains { $0.mode == .floating } })
         #expect(await h.until { h.ui.noticeKeys().contains("overflow-float") })
         let floating = h.engine.world.windows.values.first { $0.mode == .floating }!.id
         let tiled = floating == a ? b : a
-        #expect(await h.until(5) { h.frame(tiled) == Rect(0, 30, 1080, 2448) }, "the other one keeps the desktop")
+        #expect(await h.until { h.frame(tiled) == Rect(0, 30, 1080, 2448) }, "the other one keeps the desktop")
         // The user moves and resizes the floating one: Tessera leaves it there.
         await h.settle(0.1)
         h.platform.userMoves(floating, to: Rect(50, 400, 950, 1600))
@@ -455,9 +457,9 @@ extension ReconcileTests {
         // The minimise animation moves the window, then the app reports it minimised.
         h.platform.userMoves(a, to: Rect(300, 2000, 200, 100))
         h.platform.windows[a]?.isMinimized = true
+        #expect(await h.until { h.engine.world.windows[a]?.mode == .minimized })
         await h.settle(0.5)
-        #expect(h.engine.world.windows[a]?.mode == .minimized)
-        #expect(h.platform.writeCount(a) == writes, "no write fought the minimise")
+        #expect(h.platform.writeCount(a) == writes, "no write fought the minimise: \(h.platform.writes.filter { $0.window == a }.dropFirst(writes).map(\.target))")
     }
 
     @Test func nothingIsLearnedWhileAWindowIsStillOpening() async throws {
@@ -475,7 +477,7 @@ extension ReconcileTests {
         h.platform.advanceClock(by: 31)
         h.engine.requested[b] = nil
         h.engine.scheduleRender()
-        #expect(await h.until(3) { h.engine.world.facts[b]?.minSize?.height == 1500 })
+        #expect(await h.until { h.engine.world.facts[b]?.minSize?.height == 1500 })
     }
 
     @Test func learnedSizesCanBeForgotten() async throws {
@@ -513,7 +515,7 @@ extension ReconcileTests {
     @Test func draggingAFloatingWindowOntoTheStackInsertsIt() async throws {
         let h = try Harness()
         let (a, b, c) = try await floatedThird(h)
-        let size = h.frame(c)!.size
+        let size = try #require(h.frame(c)).size
         h.platform.emit(.mouseDown)
         h.platform.userMoves(c, to: Rect(origin: Point(x: 300, y: 900), size: size))
         #expect(await h.until { h.engine.draggedByUser.contains(c) })
@@ -529,7 +531,7 @@ extension ReconcileTests {
     @Test func holdingOptionKeepsADraggedWindowFloating() async throws {
         let h = try Harness()
         let (_, _, c) = try await floatedThird(h)
-        let moved = Rect(origin: Point(x: 300, y: 900), size: h.frame(c)!.size)
+        let moved = Rect(origin: Point(x: 300, y: 900), size: try #require(h.frame(c)).size)
         h.platform.emit(.mouseDown)
         h.platform.emit(.modifiersChanged([.option]))
         h.platform.userMoves(c, to: moved)

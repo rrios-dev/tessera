@@ -34,6 +34,7 @@ extension Engine {
             deferredRender = true
             return
         }
+        // No frame read yet: the first one to arrive renders again (`noteObserved`).
         guard let current = observed[id] else { return }
         // A window already parked near the corner is not written again (C6).
         if journal.hidden[id] != nil, isParked(current) { return }

@@ -25,7 +25,9 @@ if [[ ${1:-} == --rollback ]]; then
   exit 0
 fi
 
-identity=${TESSERA_SIGN_IDENTITY:-$(security find-identity -v -p codesigning | sed -n 's/.*"\(Developer ID Application: [^"]*\)".*/\1/p' | head -1)}
+# The identity's SHA-1, not its name: a name with an accent ("Ríos") reaches codesign
+# mis-encoded and matches nothing ("no identity found", 2026-10-14). The hash is ASCII.
+identity=${TESSERA_SIGN_IDENTITY:-$(security find-identity -v -p codesigning | sed -n 's/^ *[0-9]*) \([0-9A-F]\{40\}\) "Developer ID Application: .*/\1/p' | head -1)}
 
 swift build -c release --product tessera
 version=$(sed -n 's/.*static let version = "\(.*\)".*/\1/p' Sources/TesseraEngine/BuildInfo.swift)

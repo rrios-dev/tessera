@@ -107,6 +107,32 @@ tessera doctor --output fixture.json          # environment capture, identifiers
 
 Operating details, recovery and logs: `docs/RUNBOOK.md`.
 
+## Agents (Claude Code, Codex)
+
+Tessera can be driven from Claude Code, Codex or any MCP client: "put the terminal next to
+the browser", "move everything from Slack to workspace 3", "what's on my screen?". Turn it on
+in `~/.config/tessera/tessera.local.toml`:
+
+```toml
+[agents]
+enabled = true
+```
+
+and register it with your agent (`~/.local/bin/tessera` is the link `scripts/install.sh` keeps
+pointing at the installed app, wherever it lives):
+
+```bash
+claude mcp add --scope user tessera -- ~/.local/bin/tessera mcp
+```
+
+```bash
+codex mcp add tessera -- ~/.local/bin/tessera mcp
+```
+
+The agent sees desktops, workspaces and windows by app — never their titles — and runs the
+same commands as the keyboard and the CLI. Off by default; which agent used which tool is
+logged in `~/Library/Application Support/Tessera/agent-access.log`. See ADR 0005.
+
 ## Development
 
 ```bash
