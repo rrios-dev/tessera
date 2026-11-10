@@ -15,7 +15,8 @@ version=$(sed -n 's/.*static let version = "\(.*\)".*/\1/p' Sources/TesseraEngin
 sha=$(git rev-parse --short HEAD)
 
 if swift build -c release --product tessera --arch arm64 --arch x86_64 >/dev/null 2>&1; then
-  binary=.build/apple/Products/Release/tessera
+  # Asked, not assumed: SwiftPM moved universal products from .build/apple to .build/out.
+  binary=$(swift build -c release --product tessera --arch arm64 --arch x86_64 --show-bin-path)/tessera
   archs="arm64 + x86_64"
 else
   swift build -c release --product tessera
