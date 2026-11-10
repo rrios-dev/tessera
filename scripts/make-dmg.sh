@@ -10,7 +10,9 @@ out=${2:?usage: make-dmg.sh <Tessera.app> <out.dmg>}
 app=${app:A}
 out=${out:A}
 profile=${TESSERA_NOTARY_PROFILE:-tessera-notary}
-identity=${TESSERA_SIGN_IDENTITY:-$(security find-identity -v -p codesigning | sed -n 's/.*"\(Developer ID Application: [^"]*\)".*/\1/p' | head -1)}
+# The identity's SHA-1, not its name: a name with an accent ("Ríos") reaches codesign
+# mis-encoded and matches nothing — the fix release.sh and install.sh already carry.
+identity=${TESSERA_SIGN_IDENTITY:-$(security find-identity -v -p codesigning | sed -n 's/^ *[0-9]*) \([0-9A-F]\{40\}\) "Developer ID Application: .*/\1/p' | head -1)}
 [[ -n $identity ]] || { echo "no Developer ID Application identity: the image must be signed" >&2; exit 1; }
 xcrun stapler validate $app >/dev/null || { echo "$app is not stapled: notarize the app first" >&2; exit 1; }
 
