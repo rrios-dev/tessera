@@ -50,9 +50,16 @@ let package = Package(
         ),
         // The AppKit side of the engine's UI: menu bar item, on-screen display, drop highlight,
         // shortcut overlay.
+        // Opt-in usage statistics: counts per command and day, sent only after the user's yes.
+        .target(
+            name: "TesseraUsage",
+            dependencies: ["TesseraCore", "TesseraEngine"],
+            swiftSettings: common,
+            linkerSettings: [.linkedFramework("AppKit")]
+        ),
         .target(
             name: "TesseraAppUI",
-            dependencies: ["TesseraCore", "TesseraConfig", "TesseraEngine", "TesseraPorts"],
+            dependencies: ["TesseraCore", "TesseraConfig", "TesseraEngine", "TesseraPorts", "TesseraUsage"],
             swiftSettings: common,
             linkerSettings: [.linkedFramework("AppKit")]
         ),
@@ -67,7 +74,7 @@ let package = Package(
             name: "tessera",
             dependencies: [
                 "TesseraCore", "TesseraConfig", "TesseraPlatform", "TesseraPorts", "TesseraIPC", "TesseraEngine", "TesseraAppUI",
-                "TesseraMCP", .product(name: "MCPKit", package: "mcpkit"),
+                "TesseraMCP", "TesseraUsage", .product(name: "MCPKit", package: "mcpkit"),
             ],
             swiftSettings: common
         ),
@@ -90,6 +97,7 @@ let package = Package(
             swiftSettings: common
         ),
         .testTarget(name: "TesseraPlatformTests", dependencies: ["TesseraPlatform", "TesseraCore"], swiftSettings: common),
+        .testTarget(name: "TesseraUsageTests", dependencies: ["TesseraUsage", "TesseraCore"], swiftSettings: common),
         .testTarget(name: "TesseraIPCTests", dependencies: ["TesseraIPC", "TesseraCore"], swiftSettings: common),
         .testTarget(
             name: "TesseraEngineTests",

@@ -2,6 +2,7 @@ import AppKit
 import TesseraConfig
 public import TesseraCore
 public import TesseraEngine
+public import TesseraUsage
 
 /// The engine's user interface on macOS: the menu bar item, the on-screen display, VoiceOver
 /// announcements, the drop highlight and the shortcut overlay.
@@ -17,9 +18,11 @@ public final class AppKitUI: EngineUI {
     private let cheatsheet = Cheatsheet()
     private var state = UIState()
 
-    /// - Parameter menu: false for runs without a menu bar item (tests, benchmarks).
-    public init(menu: Bool) {
-        if menu { self.menu = StatusMenu() }
+    /// - Parameters:
+    ///   - menu: false for runs without a menu bar item (tests, benchmarks).
+    ///   - usage: the usage statistics, whose switch the menu shows; nil shows none.
+    public init(menu: Bool, usage: UsageReport? = nil) {
+        if menu { self.menu = StatusMenu(usage: usage) }
     }
 
     public func update(_ state: UIState) {

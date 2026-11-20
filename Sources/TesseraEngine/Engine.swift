@@ -171,6 +171,10 @@ public final class Engine {
     /// Called when the user picks Quit; the host restores windows and exits.
     public var onQuitRequested: (() -> Void)?
 
+    /// Called for every command the engine accepts while active, before it runs: the host's usage
+    /// counts (one per command kind, nothing about windows).
+    public var onCommand: ((Command) -> Void)?
+
     public init(options: Options = Options(), port: any SystemPort, ui: any EngineUI, timing: Timing = .production, log: Log? = nil) {
         self.options = options
         self.port = port

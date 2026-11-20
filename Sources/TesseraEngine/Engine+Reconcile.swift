@@ -15,6 +15,7 @@ extension Engine {
             log.info("command \(command) ignored while \(status)")
             return
         }
+        onCommand?(command)
         if nativeWorkspaces, handleNatively(command) { return }
         let before = world.focused
         dispatch(.command(command))

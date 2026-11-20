@@ -133,6 +133,14 @@ The agent sees desktops, workspaces and windows by app — never their titles �
 same commands as the keyboard and the CLI. Off by default; which agent used which tool is
 logged in `~/Library/Application Support/Tessera/agent-access.log`. See ADR 0005.
 
+## Usage statistics
+
+Tessera asks once whether you want to share anonymous usage statistics. If you say yes, once a
+day it sends how many times you used each command (focus, move, layout, workspace…), its
+version, the macOS version and your language, with a random id that is deleted when you say
+no, to the author's own server in the EU. Never window titles, app names or layouts. The menu
+bar item's switch changes the answer any time; with no, Tessera makes no network requests.
+
 ## Development
 
 ```bash

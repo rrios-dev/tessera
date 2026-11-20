@@ -3,6 +3,7 @@ import TesseraConfig
 import TesseraCore
 import TesseraEngine
 import TesseraPorts
+import TesseraUsage
 
 /// The menu bar item (audit E1). The title shows the macOS desktop and, in emulated mode, the
 /// group; the menu is built when it opens, from the latest state, so its counts are never stale.
@@ -13,8 +14,10 @@ final class StatusMenu: NSObject, NSMenuDelegate {
     var onAction: (@MainActor (UIAction) -> Void)?
     private var state = UIState()
     private var actions: [UIAction] = []
+    private let usage: UsageReport?
 
-    override init() {
+    init(usage: UsageReport? = nil) {
+        self.usage = usage
         super.init()
         menu.delegate = self
         item.menu = menu
@@ -78,9 +81,19 @@ final class StatusMenu: NSObject, NSMenuDelegate {
         buildControlSection(menu)
         buildActivity(menu)
         menu.addItem(.separator())
+        if let usage {
+            let share = NSMenuItem(title: TesseraUsage.toggleTitle, action: #selector(toggleUsage(_:)), keyEquivalent: "")
+            share.target = self
+            share.state = usage.isEnabled ? .on : .off
+            share.toolTip = TesseraUsage.toggleHelp
+            menu.addItem(share)
+        }
         let keys = NSMenuItem(title: L10n.t("Atajos de teclado…", "Keyboard shortcuts…"), action: #selector(showKeys(_:)), keyEquivalent: "")
         keys.target = self
         menu.addItem(keys)
+        let about = NSMenuItem(title: L10n.t("Acerca de Tessera", "About Tessera"), action: #selector(showAbout(_:)), keyEquivalent: "")
+        about.target = self
+        menu.addItem(about)
         let quit = NSMenuItem(title: L10n.t("Salir de Tessera y restaurar ventanas", "Quit Tessera and restore windows"),
                               action: #selector(run(_:)), keyEquivalent: "q")
         quit.target = self
@@ -238,6 +251,18 @@ final class StatusMenu: NSObject, NSMenuDelegate {
         alert.alertStyle = .informational
         NSApp.activate()
         alert.runModal()
+    }
+
+    @objc private func toggleUsage(_ sender: NSMenuItem) {
+        guard let usage else { return }
+        usage.setConsent(!usage.isEnabled)
+    }
+
+    /// The system's About panel (name, version and icon from the bundle), with the author's
+    /// website and mailbox as links in its credits.
+    @objc private func showAbout(_ sender: NSMenuItem) {
+        NSApp.activate()
+        NSApp.orderFrontStandardAboutPanel(options: [.credits: AboutCredits.make()])
     }
 
     @objc private func openAccessibility(_ sender: NSMenuItem) {

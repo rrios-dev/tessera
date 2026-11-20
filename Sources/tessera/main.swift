@@ -6,6 +6,7 @@ import TesseraCore
 import TesseraEngine
 import TesseraIPC
 import TesseraPlatform
+import TesseraUsage
 
 /// Command-line entry point: the engine (`run`), the service, diagnostics and the commands the
 /// CLI forwards to a running engine (AeroSpace-compatible names).
@@ -175,7 +176,10 @@ func runEngine(_ arguments: [String]) -> Int32 {
     try? FileManager.default.createDirectory(at: paths.directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
     let log = Log(url: paths.log)
     log.verbose = options.verbose
-    let engine = Engine(options: options, port: LivePlatform(), ui: AppKitUI(menu: menu), log: log)
+    // Usage statistics only with a menu (the switch lives there) and the default state directory
+    // (never for live tests, benchmarks or a second engine).
+    let usage: UsageReport? = menu && paths.isDefault ? TesseraUsage.makeReport() : nil
+    let engine = Engine(options: options, port: LivePlatform(), ui: AppKitUI(menu: menu, usage: usage), log: log)
     engine.onQuitRequested = { engine.shutdown(reason: "quit from the menu") { exit(0) } }
     do {
         try engine.start()
@@ -203,9 +207,35 @@ func runEngine(_ arguments: [String]) -> Int32 {
     NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.willPowerOffNotification, object: nil, queue: .main) { _ in
         MainActor.assumeIsolated { engine.shutdown(reason: "power off") { exit(0) } }
     }
+    if let usage { startUsageReports(usage, engine: engine, ask: options.promptForPermission) }
     application.run()
     return 0
 }
+
+/// Counts the launch and every command (kept only after a yes), asks once a few seconds after
+/// start-up, and sends the finished days now and every six hours. Debug builds never send.
+@MainActor
+func startUsageReports(_ usage: UsageReport, engine: Engine, ask: Bool) {
+    usage.count(.launches)
+    engine.onCommand = { command in
+        MainActor.assumeIsolated { usage.count(TesseraUsage.count(for: command)) }
+    }
+    if ask, usage.consent == nil {
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(5))
+            guard usage.consent == nil else { return }
+            TesseraUsage.ask(usage)
+        }
+    }
+    #if !DEBUG
+    Task { await usage.flush() }
+    retainedUsageTimer = Timer.scheduledTimer(withTimeInterval: 6 * 3600, repeats: true) { _ in
+        Task { @MainActor in await usage.flush() }
+    }
+    #endif
+}
+
+nonisolated(unsafe) var retainedUsageTimer: Timer?
 
 nonisolated(unsafe) var retainedSignalSources: [any DispatchSourceSignal] = []
 
